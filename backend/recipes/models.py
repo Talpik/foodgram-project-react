@@ -101,7 +101,7 @@ class Recipe(FieldSlug, FieldImage, FieldVisible, FieldUpdated, FieldCreated, Fi
         on_delete=models.CASCADE,
         related_name="recipes"
     )
-    tag = models.ManyToManyField(
+    tags = models.ManyToManyField(
         Tag,
         verbose_name=_('tags'),
         related_name="recipes"

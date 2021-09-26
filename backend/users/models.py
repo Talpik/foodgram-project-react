@@ -56,17 +56,29 @@ class AppUser(AbstractUser):
         return True
 
 
-class SubscriberFollower(models.Model):
-    subscriber = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="subscribers"
-    )
-    follower = models.ForeignKey(
+class Subscription(FieldCreated):
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="followers"
     )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="recipe_authors"
+    )
+
+    class Meta:
+        verbose_name = _('subscription')
+        verbose_name_plural = _('subscriptions')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'], name='follow_unique'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} subscribed on {self.author}'
 
 
 class FavoriteRecipe(models.Model):

@@ -49,7 +49,7 @@ class RecipeIngredientsInLines(admin.TabularInline):
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'cooking_time', 'is_visible', 'created', 'sorting',)
     list_editable = ('is_visible', 'sorting',)
-    list_filter = ('tag',)
+    list_filter = ('tags',)
     search_fields = ('name',)
     readonly_fields = ('created',)
     save_on_top = True
@@ -57,7 +57,7 @@ class RecipeAdmin(admin.ModelAdmin):
     fieldsets = (
         (_('page params'),
          {'fields': (('name', 'cooking_time', 'author',),
-                     ('tag',),
+                     ('tags',),
                      ('text', 'image',),
                      ('is_visible',),
                      ('sorting', 'created',))
