@@ -14,7 +14,7 @@ from .filters import IngredientFilter, RecipeFilter
 from .models import User, Ingredient, Tag, Recipe, RecipeIngredients, Subscription, FavoriteRecipe, ShoppingList
 from .permissions import IsOwnerOrAdminOrReadOnly
 from .serializers import UserSerializer, IngredientSerializer, TagSerializer, RecipeIngredientsSerializer, \
-    RecipeSerializer, SubscriptionSerializer, FavoriteRecipeSerializer, ShoppingListSerializer
+    RecipeSerializer, SubscriptionSerializer, FavoriteRecipeSerializer, ShoppingListSerializer, SubscriptionsSerializer
 
 
 class AppPagination(PageNumberPagination):
@@ -58,7 +58,7 @@ class AppUserViewSet(UserViewSet):
         user = request.user
         queryset = Subscription.objects.filter(user=user)
         pages = self.paginate_queryset(queryset)
-        serializer = SubscriptionSerializer(
+        serializer = SubscriptionsSerializer(
             pages,
             many=True,
             context={'request': request}
@@ -109,7 +109,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.request.GET.get('is_favorited'):
             return queryset.filter(is_favorited=True)
         elif self.request.GET.get('is_in_shopping_cart'):
-            return queryset.filter(in_shopping_list=True)
+            return queryset.filter(is_in_shopping_cart=True)
         return queryset
 
     @action(detail=True, permission_classes=[IsAuthenticated])
@@ -176,8 +176,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ingredients = RecipeIngredients.objects.filter(recipe=recipe)
             for ingredient in ingredients:
                 amount = ingredient.amount
-                name = ingredient.ingredient.name
-                measurement_unit = ingredient.ingredient.measurement_unit
+                name = ingredient.ingredients.name
+                measurement_unit = ingredient.ingredients.measurement_unit
                 if name not in shopping_list:
                     shopping_list[name] = {
                         'measurement_unit': measurement_unit,
