@@ -3,7 +3,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from recipes.models import Ingredient, Tag, RecipeIngredients, User, Recipe
-from users.models import Subscription, ShoppingList, FavoriteRecipe
+from .models import Subscription, ShoppingList, FavoriteRecipe
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -12,6 +12,12 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed')
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return Subscription.objects.filter(user=request.user, author=obj.id).exists()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -27,12 +33,15 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(source='ingredient.id')
-    name = serializers.ReadOnlyField(source='ingredient.name')
+    id = serializers.ReadOnlyField(source='ingredients.id')
+    name = serializers.ReadOnlyField(source='ingredients.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredients.measurement_unit'
+    )
 
     class Meta:
         model = RecipeIngredients
-        fields = ('id', 'name', 'quantity')
+        fields = ('id', 'name', 'amount', 'measurement_unit')
 
 
 class SubscriptionRecipeSerializer(serializers.ModelSerializer):
@@ -42,29 +51,29 @@ class SubscriptionRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    image = Base64ImageField
+    image = Base64ImageField()
     author = UserSerializer(read_only=True)
-    tag = TagSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
     ingredients = RecipeIngredientsSerializer(
-        source='ingredients_quantity',
+        source='ingredients_amounts',
         many=True,
         read_only=True
     )
-    is_favorite = serializers.SerializerMethodField()
-    in_shopping_list = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'author', 'tags', 'text', 'ingredients',
-                  'cooking_time', 'image', 'is_favorite', 'in_shopping_list')
+                  'cooking_time', 'image', 'is_favorited', 'is_in_shopping_cart')
 
-    def get_is_favorite(self, obj):
+    def get_is_favorited(self, obj):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
         return Subscription.objects.filter(user=request.user, recipe=obj).exists()
 
-    def get_in_shopping_list(self, obj):
+    def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
@@ -82,9 +91,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = self.initial_data.get('ingredients')
         set_ingredients = set()
         for ingredient in ingredients:
-            if int(ingredient.get('quantity')) <= 0:
+            if int(ingredient.get('amount')) <= 0:
                 raise serializers.ValidationError(
-                    ('Make sure the value of the quantity '
+                    ('Make sure the value of the amount '
                      'ingredient is greater than 0')
                 )
             ingredient_id = ingredient.get('id')
@@ -117,7 +126,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             RecipeIngredients.objects.create(
                 recipe=recipe,
                 ingredient_id=ingredient.get('id'),
-                amount=ingredient.get('quantity')
+                amount=ingredient.get('amount')
             )
         return recipe
 
@@ -139,12 +148,12 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         RecipeIngredients.objects.filter(recipe=recipe).delete()
         for ingredient in data.get('ingredients'):
-            ingredient_quantity = RecipeIngredients.objects.create(
+            ingredient_amount = RecipeIngredients.objects.create(
                 recipe=recipe,
                 ingredient_id=ingredient.get('id'),
-                quantity=ingredient.get('amount')
+                amount=ingredient.get('amount')
             )
-            ingredient_quantity.save()
+            ingredient_amount.save()
 
         if data.get('image') is not None:
             recipe.image = data.get('image')

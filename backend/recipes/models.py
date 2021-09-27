@@ -35,19 +35,14 @@ class ProductCategory(FieldSlug, FieldVisible, FieldUpdated, FieldCreated, Field
 class Ingredient(FieldCreated, FieldSorting):
     name = models.CharField(
         max_length=100,
-        verbose_name=_('name of the ingredient'),  # Название ингидиента
+        verbose_name=_('name of the ingredient'),
         blank=False,
         db_index=True
     )
     measurement_unit = models.CharField(
         max_length=20,
-        verbose_name=_('unit of measurement')  # единица измерения
+        verbose_name=_('unit of measurement')
     )
-    # category = models.ForeignKey(
-    #     ProductCategory,
-    #     on_delete=models.CASCADE,
-    #     blank=True
-    # )
 
     class Meta:
         verbose_name = _('ingredient')
@@ -91,7 +86,7 @@ class Tag(FieldSlug, FieldVisible, FieldCreated, FieldSorting):
 class Recipe(FieldSlug, FieldImage, FieldVisible, FieldUpdated, FieldCreated, FieldSorting):
     name = models.CharField(
         max_length=100,
-        verbose_name=_('name of the recipe'),  # Название рецепта
+        verbose_name=_('name of the recipe'),
         blank=False,
         db_index=True
     )
@@ -132,21 +127,96 @@ class Recipe(FieldSlug, FieldImage, FieldVisible, FieldUpdated, FieldCreated, Fi
 
 
 class RecipeIngredients(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredients = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(
-        verbose_name=_('quantity')  # количество
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='recipe',
+        related_name='ingredients_amounts',
     )
+    ingredients = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='ingredients_amounts',)
+    amount = models.PositiveIntegerField(verbose_name=_('amount'))
 
     class Meta:
-        verbose_name = _('ingredients of recipe')  # список ингедиентов
+        verbose_name = _('ingredients of recipe')
         verbose_name_plural = _('ingredients of recipe')
         app_label = 'recipes'
+        unique_together = ('ingredients', 'recipe')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ingredients', 'recipe'],
+                name='recipe_ingredients_unique',
+            )
+        ]
 
-    def add_ingredient(self, recipe_id, name, quantity):
+    def add_ingredient(self, recipe_id, name, amount):
         ingredient = get_object_or_404(Ingredient, name=name)
         return self.objects.get_or_create(
             recipe_id=recipe_id,
             ingredient=ingredient,
-            quantity=quantity
+            amount=amount
         )
+
+
+class Subscription(FieldCreated):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="followers"
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="recipe_authors"
+    )
+
+    class Meta:
+        verbose_name = _('subscription')
+        verbose_name_plural = _('subscriptions')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'], name='follow_unique'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} subscribed on {self.author}'
+
+
+class FavoriteRecipe(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="favorite_recipe_subscribers"
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="favorite_recipes"
+    )
+
+    class Meta:
+        verbose_name = _('favorite recipe')
+        verbose_name_plural = _('favorite recipes')
+        app_label = 'recipes'
+
+    def __str__(self):
+        return f"Recipe {self.recipe} in favorites list of {self.user}"
+
+
+class ShoppingList(FieldCreated):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="shopping_list_owners"
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="shopping_list_recipes"
+    )
+
+    def __str__(self):
+        return f"Recipe {self.recipe} in shopping list of {self.user}"

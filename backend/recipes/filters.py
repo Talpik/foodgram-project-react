@@ -12,8 +12,8 @@ class IngredientFilter(f.FilterSet):
 
 
 class RecipeFilter(f.FilterSet):
-    tag = f.AllValuesFilter(
-        field_name='tag__slug'
+    tags = f.AllValuesFilter(
+        field_name='tags__slug'
     )
     author = f.ModelChoiceFilter(
         queryset=User.objects.all()

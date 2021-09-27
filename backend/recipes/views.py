@@ -11,8 +11,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 
 from .filters import IngredientFilter, RecipeFilter
-from .models import User, Ingredient, Tag, Recipe, RecipeIngredients
-from users.models import AppUser, Subscription, FavoriteRecipe, ShoppingList
+from .models import User, Ingredient, Tag, Recipe, RecipeIngredients, Subscription, FavoriteRecipe, ShoppingList
 from .permissions import IsOwnerOrAdminOrReadOnly
 from .serializers import UserSerializer, IngredientSerializer, TagSerializer, RecipeIngredientsSerializer, \
     RecipeSerializer, SubscriptionSerializer, FavoriteRecipeSerializer, ShoppingListSerializer
@@ -99,17 +98,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Recipe.objects.all()
 
         queryset = Recipe.objects.annotate(
-            is_favorite=Exists(FavoriteRecipe.objects.filter(
+            is_favorited=Exists(FavoriteRecipe.objects.filter(
                 user=user, recipe_id=OuterRef('pk')
             )),
-            in_shopping_list=Exists(ShoppingList.objects.filter(
+            is_in_shopping_cart=Exists(ShoppingList.objects.filter(
                 user=user, recipe_id=OuterRef('pk')
             ))
         )
 
-        if self.request.GET.get('is_favorite'):
+        if self.request.GET.get('is_favorited'):
             return queryset.filter(is_favorited=True)
-        elif self.request.GET.get('in_shopping_list'):
+        elif self.request.GET.get('is_in_shopping_cart'):
             return queryset.filter(in_shopping_list=True)
         return queryset
 
@@ -141,7 +140,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, permission_classes=[IsAuthenticated])
-    def shopping_list(self, request, pk=None):
+    def shopping_cart(self, request, pk=None):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
 
@@ -157,8 +156,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @shopping_list.mapping.delete
-    def delete_shopping_list(self, request, pk=None):
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk=None):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
         favorites = get_object_or_404(
@@ -168,7 +167,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, permission_classes=[IsAuthenticated])
-    def download_shopping_list(self, request):
+    def download_shopping_cart(self, request):
         user = request.user
         shopping_list_owners = user.shopping_list_owners.all()
         shopping_list = dict()
@@ -176,22 +175,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe = item.recipe
             ingredients = RecipeIngredients.objects.filter(recipe=recipe)
             for ingredient in ingredients:
-                quantity = ingredient.amount
+                amount = ingredient.amount
                 name = ingredient.ingredient.name
                 measurement_unit = ingredient.ingredient.measurement_unit
                 if name not in shopping_list:
                     shopping_list[name] = {
                         'measurement_unit': measurement_unit,
-                        'quantity': quantity
+                        'amount': amount
                     }
                 else:
-                    shopping_list[name]['quantity'] = (
-                        shopping_list[name]['quantity'] + quantity
+                    shopping_list[name]['amount'] = (
+                        shopping_list[name]['amount'] + amount
                     )
 
         shop_list = []
         for item in shopping_list:
-            shop_list.append(f'{item} - {shopping_list[item]["quantity"]} '
+            shop_list.append(f'{item} - {shopping_list[item]["amount"]} '
                              f'{shopping_list[item]["measurement_unit"]} \n')
         response = HttpResponse(shopping_list, 'Content-Type: text/plain')
         response['Content-Disposition'] = 'attachment; filename="shoplist.txt"'

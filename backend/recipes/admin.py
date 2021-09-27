@@ -38,11 +38,6 @@ class IngredientAdmin(admin.ModelAdmin):
 
 class RecipeIngredientsInLines(admin.TabularInline):
     model = RecipeIngredients
-    # fields = ('ingredients', 'quantity', 'unit', 'model_callable', 'model_admin_callable', )
-    # readonly_fields = ('model_callable', 'unit', 'model_admin_callable', )
-    #
-    # def model_admin_callable(self, obj):
-    #     return Ingredient.objects.filter().
 
 
 @register(Recipe)
