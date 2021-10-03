@@ -19,6 +19,8 @@ services:
       - db
     env_file:
       - ./.env
+    command:
+      - python3 manage.py load_ingredients
 
   frontend:
       build:

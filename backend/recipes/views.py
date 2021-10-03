@@ -22,6 +22,11 @@ class AppPagination(PageNumberPagination):
 
 
 class AppUserViewSet(UserViewSet):
+    """
+    Viewer class with methods for url
+    'users/subscribe', 'users/delete_subscribe', 'users/subscriptions'.
+
+    """
     serializer_class = UserSerializer
     permission_classes = (IsOwnerOrAdminOrReadOnly,)
     pagination_class = AppPagination
@@ -67,6 +72,10 @@ class AppUserViewSet(UserViewSet):
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Viewer class for url 'tags'.
+
+    """
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
     pagination_class = None
@@ -74,6 +83,10 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientsViewSet(viewsets.ModelViewSet):
+    """
+    Viewer class for url 'ingredients'.
+
+    """
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     pagination_class = None
@@ -82,6 +95,11 @@ class IngredientsViewSet(viewsets.ModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    """
+    Main viewer class with methods for url
+    'recipes/', 'recipes/favorite', 'recipes/delete_favorite' and others.
+
+    """
     serializer_class = RecipeSerializer
     permission_classes = (IsOwnerOrAdminOrReadOnly,)
     pagination_class = AppPagination

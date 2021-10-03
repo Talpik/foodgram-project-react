@@ -317,6 +317,7 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
     """
     Data serializer for the FavoriteRecipe model.
+    URL = 'recipes/favorite' or 'recipes/delete_favorite'
 
     """
     recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
@@ -351,6 +352,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 class ShoppingListSerializer(FavoriteRecipeSerializer):
     """
     Data serializer for the ShoppingList model.
+    URL = 'recipes/shopping_cart' or 'recipes/delete_shopping_cart'
 
     """
     class Meta(FavoriteRecipeSerializer.Meta):
