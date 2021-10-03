@@ -12,10 +12,16 @@ from .common_fields import FieldSlug, FieldVisible, FieldUpdated, FieldSorting, 
 User = get_user_model()
 
 
-class ProductCategory(FieldSlug, FieldVisible, FieldUpdated, FieldCreated, FieldSorting):
+class ProductCategory(FieldSlug, FieldVisible, FieldUpdated,
+                      FieldCreated, FieldSorting):
+    """
+    Model for registering a product category.
+    This is the groundwork for a future feature
+    of dividing the shopping list into categories.
+    """
     name = models.CharField(
         max_length=100,
-        verbose_name=_('name of the product category'),  # Название категории продуктов
+        verbose_name=_('name of the product category'),
         blank=False,
     )
 
@@ -33,6 +39,9 @@ class ProductCategory(FieldSlug, FieldVisible, FieldUpdated, FieldCreated, Field
 
 
 class Ingredient(FieldCreated, FieldSorting):
+    """
+    Food Ingredient Model with Name and Unit.
+    """
     name = models.CharField(
         max_length=100,
         verbose_name=_('name of the ingredient'),
@@ -55,6 +64,11 @@ class Ingredient(FieldCreated, FieldSorting):
 
 
 class Tag(FieldSlug, FieldVisible, FieldCreated, FieldSorting):
+    """
+    Tag model - which allows you to register
+    the recommended consumption time of the dish.
+    Having a special hex color code for frontend.
+    """
     MEAL_TIME = (
         ('breakfast', 'Завтрак'),
         ('lunch', 'Обед'),
@@ -83,7 +97,14 @@ class Tag(FieldSlug, FieldVisible, FieldCreated, FieldSorting):
         return self.name
 
 
-class Recipe(FieldSlug, FieldImage, FieldVisible, FieldUpdated, FieldCreated, FieldSorting):
+class Recipe(FieldSlug, FieldImage, FieldVisible,
+             FieldUpdated, FieldCreated, FieldSorting):
+    """
+    The main application model that stores
+    aggregated information about a food recipe.
+    The model is associated with user models,
+    time tags, and food ingredients.
+    """
     name = models.CharField(
         max_length=100,
         verbose_name=_('name of the recipe'),
@@ -113,6 +134,7 @@ class Recipe(FieldSlug, FieldImage, FieldVisible, FieldUpdated, FieldCreated, Fi
     )
     cooking_time = models.PositiveIntegerField(
         verbose_name=_('cooking time'),
+        # cooking time cannot be less than 1 minute
         validators=[MinValueValidator(1)]
     )
 
@@ -127,6 +149,11 @@ class Recipe(FieldSlug, FieldImage, FieldVisible, FieldUpdated, FieldCreated, Fi
 
 
 class RecipeIngredients(models.Model):
+    """
+    Helpful model that stores the association
+    of a specific recipe and a specific ingredient
+    and its amount.
+    """
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -152,6 +179,18 @@ class RecipeIngredients(models.Model):
         ]
 
     def add_ingredient(self, recipe_id, name, amount):
+        """
+        Function of adding an ingredient and its quantity to a recipe.
+
+        Args:
+            recipe_id: ID of the recipe.
+            name: Name of the ingredient.
+            amount: Amount of the ingredient.
+
+        Returns:
+            RecipeIngredients instance.
+
+        """
         ingredient = get_object_or_404(Ingredient, name=name)
         return self.objects.get_or_create(
             recipe_id=recipe_id,
@@ -161,6 +200,9 @@ class RecipeIngredients(models.Model):
 
 
 class Subscription(FieldCreated):
+    """
+    User subscription model for author's recipes.
+    """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -186,6 +228,9 @@ class Subscription(FieldCreated):
 
 
 class FavoriteRecipe(models.Model):
+    """
+    Model for storing selected recipes for a specific user.
+    """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -207,6 +252,10 @@ class FavoriteRecipe(models.Model):
 
 
 class ShoppingList(FieldCreated):
+    """
+    Model for storing recipes in a shopping list,
+    which will allow you to aggregate products into a single list.
+    """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
