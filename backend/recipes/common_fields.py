@@ -7,6 +7,9 @@ from foodgram.utils import ImageUploadToFactory
 
 
 class FieldSlug(models.Model):
+    """
+    Model with slug field for reuse.
+    """
     slug = models.SlugField(
         verbose_name=_('slug'),
         unique=True,
@@ -19,6 +22,9 @@ class FieldSlug(models.Model):
 
 
 class FieldVisible(models.Model):
+    """
+    Model with boolean field for reuse.
+    """
     is_visible = models.BooleanField(
         verbose_name=_('is visible'),
         default=True
@@ -29,6 +35,9 @@ class FieldVisible(models.Model):
 
 
 class FieldCreated(models.Model):
+    """
+    Model with data time field for reuse.
+    """
     created = models.DateTimeField(
         auto_now_add=True,
         verbose_name=_('created')
@@ -39,6 +48,9 @@ class FieldCreated(models.Model):
 
 
 class FieldUpdated(models.Model):
+    """
+    Model with data time field for reuse.
+    """
     updated = models.DateTimeField(
         auto_now=True,
         verbose_name=_('updated')
@@ -49,6 +61,9 @@ class FieldUpdated(models.Model):
 
 
 class FieldSorting(models.Model):
+    """
+    Model with positive integer field for reuse.
+    """
     sorting = models.PositiveIntegerField(
         verbose_name=_('sorting'),
         default=0
@@ -59,6 +74,9 @@ class FieldSorting(models.Model):
 
 
 class FieldImage(models.Model):
+    """
+    Model with image field for reuse.
+    """
     image = models.ImageField(
         verbose_name=_('image'),
         help_text=_('image size no more than 1920х960px'),
@@ -70,6 +88,9 @@ class FieldImage(models.Model):
 
 
 class FieldSEO(models.Model):
+    """
+    Model with required fields of SEO model for reuse.
+    """
     title = models.CharField(
         verbose_name=_('title of page'),
         max_length=255,
@@ -94,6 +115,9 @@ class FieldSEO(models.Model):
 
 
 class FieldAuthor(models.Model):
+    """
+    Model with author field for reuse.
+    """
     author = models.CharField(
         verbose_name=_('author'),
         max_length=255
