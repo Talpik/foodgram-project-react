@@ -7,32 +7,54 @@ from .models import Subscription, ShoppingList, FavoriteRecipe
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Data serializer for the user model.
+    Additionally adds the field whether
+    the user is subscribed to other authors.
+
+    """
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed')
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'is_subscribed')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
-        return Subscription.objects.filter(user=request.user, author=obj.id).exists()
+        return Subscription.objects.filter(
+            user=request.user, author=obj.id
+        ).exists()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
+    """
+    Data serializer for the Ingredient model.
+
+    """
     class Meta:
         model = Ingredient
         fields = '__all__'
 
 
 class TagSerializer(serializers.ModelSerializer):
+    """
+    Data serializer for the Tag model.
+
+    """
     class Meta:
         model = Tag
         fields = '__all__'
 
 
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
+    """
+     Data serializer for the RecipeIngredient model.
+     Added field 'measurement_unit' through the ingredient model.
+
+     """
     id = serializers.ReadOnlyField(source='ingredients.id')
     name = serializers.ReadOnlyField(source='ingredients.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -45,12 +67,20 @@ class RecipeIngredientsSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionRecipeSerializer(serializers.ModelSerializer):
+    """
+    Data serializer for the Recipe model.
+
+    """
     class Meta:
         model = Recipe
-        fields = ['id', 'name', 'image', 'cooking_time']
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    """
+    Data serializer for the Recipe model.
+
+    """
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -64,28 +94,51 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'author', 'tags', 'text', 'ingredients',
-                  'cooking_time', 'image', 'is_favorited', 'is_in_shopping_cart')
+        fields = ('id', 'name', 'author', 'tags', 'text',
+                  'ingredients', 'cooking_time', 'image',
+                  'is_favorited', 'is_in_shopping_cart')
 
     def get_is_favorited(self, obj):
+        """
+        The method of processing the field 'is_favorited' -
+        which allows you to determine whether this recipe
+        is in the favorites of the requested user.
+        For this, the FavoriteRecipe model
+        is used in which this link is stored.
+
+        """
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
-        return FavoriteRecipe.objects.filter(user=request.user, recipe=obj).exists()
+        return FavoriteRecipe.objects.filter(
+            user=request.user, recipe=obj
+        ).exists()
 
     def get_is_in_shopping_cart(self, obj):
+        """
+        The method of processing the field 'is_in_shopping_cart' -
+        which allows you to determine whether this recipe
+        is in the shopping list of the requested user.
+        For this, the ShoppingList model is used in which this link is stored.
+
+        """
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
-        return ShoppingList.objects.filter(user=request.user, recipe=obj).exists()
+        return ShoppingList.objects.filter(
+            user=request.user, recipe=obj
+        ).exists()
 
     def validate(self, data: dict) -> dict:
         """
+        Validates the provided data for various errors.
+
         Args:
             data (dict): Dictionary with recipe's data.
 
         Returns:
-            data (dict): Dictionary with recipe's data, in which was added ingredients id's.
+            data (dict): Dictionary with recipe's data, in which was
+            added ingredients id's.
 
         """
         ingredients = self.initial_data.get('ingredients')
@@ -107,6 +160,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def create(self, data: dict) -> Recipe:
         """
+        Returns the generated model object Recipe
+        based on the presented validated data.
+
         Args:
             data (dict): Validated data.
 
@@ -132,12 +188,15 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def update(self, recipe: Recipe, data: dict) -> Recipe:
         """
+        The method updates the recipe data -
+        while first deleting all its tags and ingredients.
+
         Args:
-            recipe (Recipe):
-            data (dict):
+            recipe (Recipe): A instance of recipe.
+            data (dict): Updating data.
 
         Returns:
-            recipe (Recipe):
+            recipe (Recipe): Updated instance of recipe.
 
         """
         recipe.tags.clear()
@@ -165,6 +224,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
+    """
+    Data serializer for the Subscription model.
+
+    """
     queryset = User.objects.all()
     user = serializers.PrimaryKeyRelatedField(queryset=queryset)
     author = serializers.PrimaryKeyRelatedField(queryset=queryset)
@@ -173,7 +236,17 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         model = Subscription
         fields = ('user', 'author')
 
-    def validate(self, data):
+    def validate(self, data: dict) -> dict:
+        """
+        Validates the provided data for various errors.
+
+        Args:
+            data (dict): Dictionary with Subscription's data.
+
+        Returns:
+            data (dict): Validated Subscription's data.
+
+        """
         request = self.context.get('request')
         author_id = data.get('author').id
         subscription_exists = Subscription.objects.filter(
@@ -195,6 +268,10 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionsSerializer(serializers.ModelSerializer):
+    """
+    Data serializer for the User model in case of subscriptions.
+
+    """
     email = serializers.ReadOnlyField(source='author.email')
     id = serializers.ReadOnlyField(source='author.id')
     first_name = serializers.ReadOnlyField(source='author.first_name')
@@ -230,10 +307,18 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_recipes_count(obj):
+        """
+        Handler for getting the number of recipes created by the user.
+
+        """
         return Recipe.objects.filter(author=obj.author).count()
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
+    """
+    Data serializer for the FavoriteRecipe model.
+
+    """
     recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
@@ -264,6 +349,10 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
 
 class ShoppingListSerializer(FavoriteRecipeSerializer):
+    """
+    Data serializer for the ShoppingList model.
+
+    """
     class Meta(FavoriteRecipeSerializer.Meta):
         model = ShoppingList
 
