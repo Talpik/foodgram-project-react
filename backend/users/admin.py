@@ -9,6 +9,10 @@ from .models import AppUser
 
 
 class UserCreationForm(forms.ModelForm):
+    """
+    Form with the required fields to
+    create a user on the basis of the AppUser model
+    """
     password_1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password_2 = forms.CharField(
         label='Password confirmation', widget=forms.PasswordInput
@@ -46,10 +50,15 @@ class UserChangeForm(forms.ModelForm):
 
 
 class UserAdmin(BaseUserAdmin):
+    """
+    Registering the required fields
+    of the user model in the Django admin panel.
+    """
     form = UserChangeForm
     add_form = UserCreationForm
 
-    list_display = ('email', 'username', 'first_name', 'last_name', 'is_admin')
+    list_display = ('email', 'username', 'first_name',
+                    'last_name', 'is_admin')
     list_filter = ('is_admin', 'email', 'username')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),

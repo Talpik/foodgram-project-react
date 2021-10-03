@@ -2,7 +2,14 @@ from django.contrib.auth.models import BaseUserManager
 
 
 class AppUserManager(BaseUserManager):
-    def create_user(self, email, username, first_name, last_name, password=None):
+    """
+    AppUser model instantiation manager.
+    Allows you to separate the logic for creating
+    regular users and superusers.
+    """
+    def create_user(self, email: str, username: str,
+                    first_name: str, last_name: str,
+                    password: str = None):
         if not email:
             raise ValueError('Email address for AppUser object is not found')
         user = self.model(
@@ -15,7 +22,9 @@ class AppUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, username, first_name, last_name, password=None):
+    def create_superuser(self, email: str, username: str,
+                         first_name: str, last_name: str,
+                         password: str = None):
         user = self.create_user(
             email=email,
             password=password,

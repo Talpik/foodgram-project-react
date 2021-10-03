@@ -6,6 +6,9 @@ from .managers import AppUserManager
 
 
 class AppUser(AbstractUser):
+    """
+    The foodgram app user model, which is used to register with the app.
+    """
     email = models.EmailField(
         unique=True,
         max_length=254,
