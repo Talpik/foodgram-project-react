@@ -4,6 +4,9 @@ from .models import Ingredient, Recipe, User
 
 
 class IngredientFilter(f.FilterSet):
+    """
+    Custom filter for Ingredient model filtered by name field.
+    """
     name = f.CharFilter(field_name='name', lookup_expr='istartswith')
 
     class Meta:
@@ -12,6 +15,9 @@ class IngredientFilter(f.FilterSet):
 
 
 class RecipeFilter(f.FilterSet):
+    """
+    Custom filter for Recipe model filtered by name and author fields.
+    """
     tags = f.AllValuesFilter(
         field_name='tags__slug'
     )
