@@ -5,8 +5,8 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404
 
-from .common_fields import FieldSlug, FieldVisible, FieldUpdated, FieldSorting, \
-    FieldCreated, FieldImage
+from .common_fields import FieldSlug, FieldVisible, FieldUpdated, \
+    FieldSorting, FieldCreated, FieldImage
 
 
 User = get_user_model()
