@@ -8,6 +8,14 @@ from .models import ProductCategory, Ingredient, RecipeIngredients, Recipe, Tag
 # Register your models here.
 @register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
+    """
+    Registering the required fields
+    of the Product Category model in the Django admin panel.
+
+    Note:
+        It's for next futures.
+
+    """
     list_display = ('name', 'created', 'is_visible', 'sorting',)
     list_editable = ('is_visible', 'sorting',)
     list_filter = ('is_visible',)
@@ -23,6 +31,11 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 
 @register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
+    """
+    Registering the required fields
+    of the Ingredient model in the Django admin panel.
+
+    """
     list_display = ('name', 'measurement_unit', 'created', 'sorting',)
     list_editable = ('sorting',)
     list_filter = ('measurement_unit',)
@@ -37,11 +50,20 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class RecipeIngredientsInLines(admin.TabularInline):
+    """
+    Integration model with ingredients for Recipes.
+
+    """
     model = RecipeIngredients
 
 
 @register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    """
+    Registering the required fields
+    of the Recipe model in the Django admin panel.
+
+    """
     list_display = ('name', 'cooking_time', 'is_visible', 'created', 'sorting',)
     list_editable = ('is_visible', 'sorting',)
     list_filter = ('tags',)
@@ -63,6 +85,11 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @register(Tag)
 class TagAdmin(admin.ModelAdmin):
+    """
+    Registering the required fields
+    of the Tag model in the Django admin panel.
+
+    """
     list_display = ('name', 'color', 'is_visible', 'created', 'sorting',)
     list_editable = ('color', 'is_visible', 'sorting',)
     list_filter = ('is_visible',)
