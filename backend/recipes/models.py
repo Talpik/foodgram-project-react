@@ -126,7 +126,7 @@ class Recipe(AbstractSlug, AbstractImage, AbstractVisible,
     )
     ingredients = models.ManyToManyField(
         "Ingredient",
-        through="recipes.models.RecipeIngredient",
+        through="RecipeIngredient",
         verbose_name="ingredients of recipe",
     )
     cooking_time = models.PositiveIntegerField(
@@ -235,7 +235,6 @@ class FavoriteRecipe(models.Model):
     )
     recipe = models.ForeignKey(
         Recipe,
-        unique=True,
         on_delete=models.CASCADE,
         related_name="favorite_recipes"
     )
@@ -244,6 +243,17 @@ class FavoriteRecipe(models.Model):
         verbose_name = "favorite recipe"
         verbose_name_plural = "favorite recipes"
         app_label = "recipes"
+
+    @classmethod
+    def create(cls, user, recipe):
+        favorite_recipe = FavoriteRecipe.objects.filter(
+            user=user, recipe=recipe
+        )[0].exists()
+        if favorite_recipe:
+            raise ValueError(f"Favorite Recipe already exist.")
+        else:
+            favorite_recipe = cls(user=user, recipe=recipe)
+        return favorite_recipe
 
     def __str__(self):
         return f"Recipe {self.recipe} in favorites list of {self.user}"
@@ -261,10 +271,25 @@ class ShoppingList(AbstractCreated):
     )
     recipe = models.ForeignKey(
         Recipe,
-        unique=True,
         on_delete=models.CASCADE,
         related_name="shopping_list_recipes"
     )
 
+    class Meta:
+        verbose_name = "shopping list"
+        verbose_name_plural = "shopping list"
+        app_label = "recipes"
+
     def __str__(self):
         return f"Recipe {self.recipe} in shopping list of {self.user}"
+
+    @classmethod
+    def create(cls, user, recipe):
+        recipe_in_shop_list = ShoppingList.objects.filter(
+            user=user, recipe=recipe
+        )[0].exists()
+        if recipe_in_shop_list:
+            raise ValueError(f"This recipe is already exist in shop list.")
+        else:
+            recipe_in_shop_list = cls(user=user, recipe=recipe)
+        return recipe_in_shop_list

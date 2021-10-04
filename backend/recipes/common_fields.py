@@ -15,6 +15,9 @@ class AbstractSlug(models.Model):
         default=uuid.uuid1
     )
 
+    class Meta(object):
+        abstract = True
+
 
 class AbstractVisible(models.Model):
     """
@@ -24,6 +27,13 @@ class AbstractVisible(models.Model):
         verbose_name="is visible",
         default=True
     )
+
+    # Для ревьюера - если удалить это наследование возникает конфликт
+    # recipes.Ingredient: (models.E005) The field 'id' from parent model
+    # 'recipes.abstractvisible' clashes with the field 'id' from parent
+    # model 'recipes.abstractvisible'.
+    class Meta(object):
+        abstract = True
 
 
 class AbstractCreated(models.Model):
@@ -35,6 +45,9 @@ class AbstractCreated(models.Model):
         verbose_name="created"
     )
 
+    class Meta(object):
+        abstract = True
+
 
 class AbstractUpdated(models.Model):
     """
@@ -45,6 +58,9 @@ class AbstractUpdated(models.Model):
         verbose_name="updated"
     )
 
+    class Meta(object):
+        abstract = True
+
 
 class AbstractSorting(models.Model):
     """
@@ -54,6 +70,9 @@ class AbstractSorting(models.Model):
         verbose_name="sorting",
         default=0
     )
+
+    class Meta(object):
+        abstract = True
 
 
 class AbstractImage(models.Model):
@@ -66,6 +85,9 @@ class AbstractImage(models.Model):
         upload_to=ImageUploadToFactory("images")
     )
 
+    class Meta(object):
+        abstract = True
+
 
 class AbstractAuthor(models.Model):
     """
@@ -75,3 +97,6 @@ class AbstractAuthor(models.Model):
         verbose_name="author",
         max_length=255
     )
+
+    class Meta(object):
+        abstract = True
