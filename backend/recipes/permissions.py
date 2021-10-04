@@ -11,7 +11,7 @@ class IsOwnerOrAdminOrReadOnly(BasePermission):
         Only authenticated users are allowed to post requests.
 
         """
-        if request.method == 'POST':
+        if request.method == "POST":
             return request.user.is_authenticated
         return True
 
@@ -22,6 +22,6 @@ class IsOwnerOrAdminOrReadOnly(BasePermission):
         or this user is a superuser, or these are safe methods.
 
         """
-        if request.method in ('GET', 'HEAD', 'OPTIONS') or request.user.is_superuser:
+        if request.method in ("GET", "HEAD", "OPTIONS") or request.user.is_superuser:
             return True
         return request.user == obj.author

@@ -1,11 +1,8 @@
 from django.contrib import admin
 from django.contrib.admin.decorators import register
-from django.utils.translation import gettext_lazy as _
-
-from .models import ProductCategory, Ingredient, RecipeIngredients, Recipe, Tag
+from .models import ProductCategory, Ingredient, RecipeIngredient, Recipe, Tag
 
 
-# Register your models here.
 @register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
     """
@@ -16,16 +13,16 @@ class ProductCategoryAdmin(admin.ModelAdmin):
         It's for next futures.
 
     """
-    list_display = ('name', 'created', 'is_visible', 'sorting',)
-    list_editable = ('is_visible', 'sorting',)
-    list_filter = ('is_visible',)
-    search_fields = ('name',)
-    readonly_fields = ('created', 'updated',)
+    list_display = ("name", "created", "is_visible", "sorting",)
+    list_editable = ("is_visible", "sorting",)
+    list_filter = ("is_visible",)
+    search_fields = ("name",)
+    readonly_fields = ("created", "updated",)
     save_on_top = True
 
     fieldsets = (
-        (_('page params'),
-         {'fields': ('name', 'sorting', 'is_visible', 'created', 'updated',)}),
+        ("page params",
+         {"fields": ("name", "sorting", "is_visible", "created", "updated",)}),
     )
 
 
@@ -44,8 +41,8 @@ class IngredientAdmin(admin.ModelAdmin):
     save_on_top = True
 
     fieldsets = (
-        (_('page params'),
-         {'fields': ('name', 'measurement_unit', 'sorting', 'created',)}),
+        ("page params",
+         {"fields": ("name", "measurement_unit", "sorting", "created",)}),
     )
 
 
@@ -54,7 +51,7 @@ class RecipeIngredientsInLines(admin.TabularInline):
     Integration model with ingredients for Recipes.
 
     """
-    model = RecipeIngredients
+    model = RecipeIngredient
 
 
 @register(Recipe)
@@ -64,20 +61,20 @@ class RecipeAdmin(admin.ModelAdmin):
     of the Recipe model in the Django admin panel.
 
     """
-    list_display = ('name', 'cooking_time', 'is_visible', 'created', 'sorting',)
-    list_editable = ('is_visible', 'sorting',)
-    list_filter = ('tags',)
-    search_fields = ('name',)
-    readonly_fields = ('created',)
+    list_display = ("name", "cooking_time", "is_visible", "created", "sorting",)
+    list_editable = ("is_visible", "sorting",)
+    list_filter = ("tags",)
+    search_fields = ("name",)
+    readonly_fields = ("created",)
     save_on_top = True
 
     fieldsets = (
-        (_('page params'),
-         {'fields': (('name', 'cooking_time', 'author',),
-                     ('tags',),
-                     ('text', 'image',),
-                     ('is_visible',),
-                     ('sorting', 'created',))
+        ("page params",
+         {"fields": (("name", "cooking_time", "author",),
+                     ("tags",),
+                     ("text", "image",),
+                     ("is_visible",),
+                     ("sorting", "created",))
           }),
     )
     inlines = (RecipeIngredientsInLines,)
@@ -90,17 +87,17 @@ class TagAdmin(admin.ModelAdmin):
     of the Tag model in the Django admin panel.
 
     """
-    list_display = ('name', 'color', 'is_visible', 'created', 'sorting',)
-    list_editable = ('color', 'is_visible', 'sorting',)
-    list_filter = ('is_visible',)
-    search_fields = ('name',)
-    readonly_fields = ('created',)
+    list_display = ("name", "color", "is_visible", "created", "sorting",)
+    list_editable = ("color", "is_visible", "sorting",)
+    list_filter = ("is_visible",)
+    search_fields = ("name",)
+    readonly_fields = ("created",)
     save_on_top = True
 
     fieldsets = (
-        (_('page params'),
-         {'fields': (('name', 'color',),
-                     ('is_visible',),
-                     ('sorting', 'created', ))
+        ("page params",
+         {"fields": (("name", "color",),
+                     ("is_visible",),
+                     ("sorting", "created", ))
           }),
     )

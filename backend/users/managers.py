@@ -11,7 +11,7 @@ class AppUserManager(BaseUserManager):
                     first_name: str, last_name: str,
                     password: str = None):
         if not email:
-            raise ValueError('Email address for AppUser object is not found')
+            raise ValueError("Email address for AppUser object is not found")
         user = self.model(
             email=self.normalize_email(email),
             username=username,

@@ -2,18 +2,17 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404
 
-from .common_fields import FieldSlug, FieldVisible, FieldUpdated, \
-    FieldSorting, FieldCreated, FieldImage
+from .common_fields import (AbstractSlug, AbstractVisible, AbstractUpdated,
+                            AbstractSorting, AbstractCreated, AbstractImage)
 
 
 User = get_user_model()
 
 
-class ProductCategory(FieldSlug, FieldVisible, FieldUpdated,
-                      FieldCreated, FieldSorting):
+class ProductCategory(AbstractSlug, AbstractVisible, AbstractUpdated,
+                      AbstractCreated, AbstractSorting):
     """
     Model for registering a product category.
     This is the groundwork for a future feature
@@ -21,84 +20,83 @@ class ProductCategory(FieldSlug, FieldVisible, FieldUpdated,
     """
     name = models.CharField(
         max_length=100,
-        verbose_name=_('name of the product category'),
-        blank=False,
+        verbose_name="name of the product category",
     )
 
     class Meta:
-        verbose_name = _('category of products')
-        verbose_name_plural = _('categories of products')
-        app_label = 'recipes'
-        ordering = ('sorting',)
+        verbose_name = "category of products"
+        verbose_name_plural = "categories of products"
+        app_label = "recipes"
+        ordering = ("sorting",)
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('page', kwargs={'slug': self.slug})
+        return reverse("page", kwargs={"slug": self.slug})
 
 
-class Ingredient(FieldCreated, FieldSorting):
+class Ingredient(AbstractCreated, AbstractSorting):
     """
     Food Ingredient Model with Name and Unit.
     """
     name = models.CharField(
         max_length=100,
-        verbose_name=_('name of the ingredient'),
-        blank=False,
+        verbose_name="name of the ingredient",
         db_index=True
     )
     measurement_unit = models.CharField(
         max_length=20,
-        verbose_name=_('unit of measurement')
+        verbose_name="unit of measurement"
     )
 
     class Meta:
-        verbose_name = _('ingredient')
-        verbose_name_plural = _('ingredients')
-        app_label = 'recipes'
-        ordering = ('sorting',)
+        verbose_name = "ingredient"
+        verbose_name_plural = "ingredients"
+        app_label = "recipes"
+        ordering = ("sorting",)
 
     def __str__(self):
         return self.name
 
 
-class Tag(FieldSlug, FieldVisible, FieldCreated, FieldSorting):
+class Tag(AbstractSlug, AbstractVisible, AbstractCreated, AbstractSorting):
     """
     Tag model - which allows you to register
     the recommended consumption time of the dish.
     Having a special hex color code for frontend.
     """
+    BREAKFAST = "BR"
+    LUNCH = "LN"
+    DINNER = "DN"
     MEAL_TIME = (
-        ('breakfast', 'Завтрак'),
-        ('lunch', 'Обед'),
-        ('dinner', 'Ужин'),
+        (BREAKFAST, "Завтрак"),
+        (LUNCH, "Обед"),
+        (DINNER, "Ужин"),
     )
     name = models.CharField(
         max_length=20,
-        verbose_name=_('meal time'),
+        verbose_name="meal time",
         choices=MEAL_TIME,
-        blank=False,
         db_index=True
     )
     color = models.CharField(
         max_length=10,
-        verbose_name=_('HEX color scheme'),
-        blank=False
+        verbose_name="HEX color scheme",
     )
 
     class Meta:
-        verbose_name = _('tag')
-        verbose_name_plural = _('tags')
-        app_label = 'recipes'
-        ordering = ('sorting',)
+        verbose_name = "tag"
+        verbose_name_plural = "tags"
+        app_label = "recipes"
+        ordering = ("sorting",)
 
     def __str__(self):
         return self.name
 
 
-class Recipe(FieldSlug, FieldImage, FieldVisible,
-             FieldUpdated, FieldCreated, FieldSorting):
+class Recipe(AbstractSlug, AbstractImage, AbstractVisible,
+             AbstractUpdated, AbstractCreated, AbstractSorting):
     """
     The main application model that stores
     aggregated information about a food recipe.
@@ -107,8 +105,7 @@ class Recipe(FieldSlug, FieldImage, FieldVisible,
     """
     name = models.CharField(
         max_length=100,
-        verbose_name=_('name of the recipe'),
-        blank=False,
+        verbose_name="name of the recipe",
         db_index=True
     )
     author = models.ForeignKey(
@@ -119,36 +116,36 @@ class Recipe(FieldSlug, FieldImage, FieldVisible,
     )
     tags = models.ManyToManyField(
         Tag,
-        verbose_name=_('tags'),
+        verbose_name="tags",
         related_name="recipes"
     )
     text = models.TextField(
-        verbose_name=_('text'),
+        verbose_name="text",
         null=True,
         blank=True
     )
     ingredients = models.ManyToManyField(
-        'Ingredient',
-        through='RecipeIngredients',
-        verbose_name=_('ingredients of recipe'),  # список ингедиентов
+        "Ingredient",
+        through="recipes.models.RecipeIngredient",
+        verbose_name="ingredients of recipe",
     )
     cooking_time = models.PositiveIntegerField(
-        verbose_name=_('cooking time'),
+        verbose_name="cooking time",
         # cooking time cannot be less than 1 minute
         validators=[MinValueValidator(1)]
     )
 
     class Meta:
-        verbose_name = _('recipe')
-        verbose_name_plural = _('recipes')
-        app_label = 'recipes'
-        ordering = ('sorting',)
+        verbose_name = "recipe"
+        verbose_name_plural = "recipes"
+        app_label = "recipes"
+        ordering = ("sorting",)
 
     def __str__(self):
         return self.name
 
 
-class RecipeIngredients(models.Model):
+class RecipeIngredient(models.Model):
     """
     Helpful model that stores the association
     of a specific recipe and a specific ingredient
@@ -157,24 +154,23 @@ class RecipeIngredients(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        verbose_name='recipe',
-        related_name='ingredients_amounts',
+        verbose_name="recipe",
+        related_name="ingredients_amounts",
     )
     ingredients = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='ingredients_amounts',)
-    amount = models.PositiveIntegerField(verbose_name=_('amount'))
+        related_name="ingredients_amounts",)
+    amount = models.PositiveIntegerField(verbose_name="amount")
 
     class Meta:
-        verbose_name = _('ingredients of recipe')
-        verbose_name_plural = _('ingredients of recipe')
-        app_label = 'recipes'
-        unique_together = ('ingredients', 'recipe')
+        verbose_name = "ingredients of recipe"
+        verbose_name_plural = "ingredients of recipe"
+        app_label = "recipes"
         constraints = [
             models.UniqueConstraint(
-                fields=['ingredients', 'recipe'],
-                name='recipe_ingredients_unique',
+                fields=["ingredients", "recipe"],
+                name="recipe_ingredients_unique",
             )
         ]
 
@@ -188,7 +184,7 @@ class RecipeIngredients(models.Model):
             amount: Amount of the ingredient.
 
         Returns:
-            RecipeIngredients instance.
+            RecipeIngredient instance.
 
         """
         ingredient = get_object_or_404(Ingredient, name=name)
@@ -199,7 +195,7 @@ class RecipeIngredients(models.Model):
         )
 
 
-class Subscription(FieldCreated):
+class Subscription(AbstractCreated):
     """
     User subscription model for author's recipes.
     """
@@ -215,16 +211,17 @@ class Subscription(FieldCreated):
     )
 
     class Meta:
-        verbose_name = _('subscription')
-        verbose_name_plural = _('subscriptions')
+        verbose_name = "subscription"
+        verbose_name_plural = "subscriptions"
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'author'], name='follow_unique'
+                fields=["user", "author"], name="follow_unique"
+
             )
         ]
 
     def __str__(self):
-        return f'{self.user} subscribed on {self.author}'
+        return f"{self.user} subscribed on {self.author}"
 
 
 class FavoriteRecipe(models.Model):
@@ -238,20 +235,21 @@ class FavoriteRecipe(models.Model):
     )
     recipe = models.ForeignKey(
         Recipe,
+        unique=True,
         on_delete=models.CASCADE,
         related_name="favorite_recipes"
     )
 
     class Meta:
-        verbose_name = _('favorite recipe')
-        verbose_name_plural = _('favorite recipes')
-        app_label = 'recipes'
+        verbose_name = "favorite recipe"
+        verbose_name_plural = "favorite recipes"
+        app_label = "recipes"
 
     def __str__(self):
         return f"Recipe {self.recipe} in favorites list of {self.user}"
 
 
-class ShoppingList(FieldCreated):
+class ShoppingList(AbstractCreated):
     """
     Model for storing recipes in a shopping list,
     which will allow you to aggregate products into a single list.
@@ -263,6 +261,7 @@ class ShoppingList(FieldCreated):
     )
     recipe = models.ForeignKey(
         Recipe,
+        unique=True,
         on_delete=models.CASCADE,
         related_name="shopping_list_recipes"
     )
