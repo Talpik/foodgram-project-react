@@ -144,19 +144,25 @@ class RecipeSerializer(serializers.ModelSerializer):
         """
         ingredients = self.initial_data.get("ingredients")
         set_ingredients = set()
-        for ingredient in ingredients:
-            if int(ingredient.get("amount")) <= 0:
-                raise serializers.ValidationError(
-                    ("Make sure the value of the amount "
-                     "ingredient is greater than 0")
-                )
-            ingredient_id = ingredient.get("id")
-            if ingredient_id in set_ingredients:
-                raise serializers.ValidationError(
-                    "The ingredient in the recipe must not be repeated."
-                )
-            set_ingredients.add(ingredient_id)
+        if not ingredients:
+            raise serializers.ValidationError(
+                "Make sure that at least one ingredient has been added"
+            )
+        else:
+            for ingredient in ingredients:
+                if int(ingredient.get("amount")) <= 0:
+                    raise serializers.ValidationError(
+                        ("Make sure the value of the amount "
+                         "ingredient is greater than 0")
+                    )
+                ingredient_id = ingredient.get("id")
+                if ingredient_id in set_ingredients:
+                    raise serializers.ValidationError(
+                        "The ingredient in the recipe must not be repeated."
+                    )
+                set_ingredients.add(ingredient_id)
         data["ingredients"] = ingredients
+
         tags = self.initial_data.get("tags")
         if not tags:
             raise serializers.ValidationError(
@@ -168,12 +174,14 @@ class RecipeSerializer(serializers.ModelSerializer):
                     "Some tag not exist in database."
                 )
         data["tags"] = tags
+
         cooking_time = self.initial_data.get("cooking_time")
         if cooking_time < 1:
             raise serializers.ValidationError(
                 "Make sure that cooking time is grater then 0."
             )
         data["cooking_time"] = cooking_time
+
         return data
 
     def create(self, data: dict) -> Recipe:
@@ -193,13 +201,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(image=image, **data)
         tags = self.initial_data.get("tags")
         self.adding_tags_to_recipe(tags, recipe)
+        self.save_ingredients_in_recipe(ingredients, recipe)
 
-        for ingredient in ingredients:
-            RecipeIngredient.objects.create(
-                recipe=recipe,
-                ingredients_id=ingredient.get("id"),
-                amount=ingredient.get("amount")
-            )
         return recipe
 
     def update(self, recipe: Recipe, data: dict) -> Recipe:
@@ -220,13 +223,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         self.adding_tags_to_recipe(tags, recipe)
 
         RecipeIngredient.objects.filter(recipe=recipe).delete()
-        for ingredient in data.get("ingredients"):
-            ingredient_amount = RecipeIngredient.objects.create(
-                recipe=recipe,
-                ingredient_id=ingredient.get("id"),
-                amount=ingredient.get("amount")
-            )
-            ingredient_amount.save()
+        ingredients = data.get("ingredients")
+        self.save_ingredients_in_recipe(ingredients, recipe)
 
         if data.get("image") is not None:
             recipe.image = data.get("image")
@@ -240,6 +238,15 @@ class RecipeSerializer(serializers.ModelSerializer):
     def adding_tags_to_recipe(tags, recipe):
         for tag_id in tags:
             recipe.tags.add(get_object_or_404(Tag, pk=tag_id))
+
+    @staticmethod
+    def save_ingredients_in_recipe(ingredients, recipe):
+        for ingredient in ingredients:
+            RecipeIngredient.objects.create(
+                recipe=recipe,
+                ingredient_id=ingredient.get("id"),
+                amount=ingredient.get("amount")
+            )
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):

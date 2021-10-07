@@ -30,8 +30,9 @@ class RecipeFilter(f.FilterSet):
         model = Recipe
         fields = ["tags", "author"]
 
-    def filter_recipe_queryset(self):
-        user = self.request.user
+    @staticmethod
+    def filter_recipe_queryset(request):
+        user = request.user
 
         if user.is_anonymous:
             return Recipe.objects.all()
@@ -45,8 +46,8 @@ class RecipeFilter(f.FilterSet):
             ))
         )
 
-        if self.request.GET.get('is_favorited'):
+        if request.GET.get('is_favorited'):
             return queryset.filter(is_favorited=True)
-        elif self.request.GET.get('is_in_shopping_cart'):
+        elif request.GET.get('is_in_shopping_cart'):
             return queryset.filter(is_in_shopping_cart=True)
         return queryset
