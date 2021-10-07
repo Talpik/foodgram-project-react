@@ -70,18 +70,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-#
-# DATABASES = {
-#     'default': {
-#         'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
-#         'NAME': os.getenv('POSTGRES_DB', default='food_gram'),
-#         'USER': os.getenv('POSTGRES_USER', default='food_gram'),
-#         'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='food_gram'),
-#         'HOST': os.getenv('DB_HOST', default='db'),
-#         'PORT': os.getenv('DB_PORT', default='5432'),
-#     }
-# }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
