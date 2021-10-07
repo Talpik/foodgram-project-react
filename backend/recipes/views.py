@@ -1,4 +1,3 @@
-from django.db.models import Exists, OuterRef
 from django.http.response import HttpResponse
 
 from djoser.views import UserViewSet
@@ -11,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 
 from .filters import IngredientFilter, RecipeFilter
-from .models import (User, Ingredient, Tag, Recipe, RecipeIngredient,
+from .models import (User, Ingredient, Tag, Recipe,
                      Subscription, FavoriteRecipe, ShoppingList)
 from .permissions import IsOwnerOrAdminOrReadOnly
 from .serializers import (UserSerializer, IngredientSerializer,
@@ -113,7 +112,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return serializer.save(author=self.request.user)
 
     def get_queryset(self):
-        queryset = self.filter_class.filter_recipe_queryset()
+        queryset = self.filter_class.filter_recipe_queryset(self.request)
         return queryset
 
     @action(detail=True, permission_classes=[IsAuthenticated])
@@ -172,30 +171,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
-        user = request.user
-        shopping_list_owners = user.shopping_list_owners.all()
-        shopping_list = dict()
-        for item in shopping_list_owners:
-            recipe = item.recipe
-            ingredients = RecipeIngredient.objects.filter(recipe=recipe)
-            for ingredient in ingredients:
-                amount = ingredient.amount
-                name = ingredient.ingredients.name
-                measurement_unit = ingredient.ingredients.measurement_unit
-                if name not in shopping_list:
-                    shopping_list[name] = {
-                        "measurement_unit": measurement_unit,
-                        "amount": amount
-                    }
-                else:
-                    shopping_list[name]["amount"] = (
-                        shopping_list[name]["amount"] + amount
-                    )
+        all_recipes = Recipe.objects.all()
+        recipes = all_recipes.shopping_list_recipes.filter(
+            user=request.user
+        )
+        value_list = recipes.objects.value_list(
+            "ingredients__ingredients__name",
+            "ingredients__amount",
+            "ingredients__ingredients_measurement__unit",
+        )
 
-        shop_list = []
-        for item in shopping_list:
-            shop_list.append(f'{item} - {shopping_list[item]["amount"]} '
-                             f'{shopping_list[item]["measurement_unit"]} \n')
-        response = HttpResponse(shop_list, "Content-Type: text/plain")
+        shop_dict = dict()
+        for e in value_list:
+            if not shop_dict.get(f"{e[0]}, {e[2]} - "):
+                shop_dict[f"{e[0]}, {e[2]} : "] = 0
+                shop_dict[f"{e[0]}, {e[2]} : "] += e[1]
+            else:
+                shop_dict[f"{e[0]}, {e[2]} : "] += e[1]
+        shop_string = "\n".join("{} {},".format(
+            k, v
+        ) for k, v in shop_dict.items())
+        response = HttpResponse(shop_string, "Content-Type: text/plain")
         response["Content-Disposition"] = 'attachment; filename="shoplist.txt"'
         return response
