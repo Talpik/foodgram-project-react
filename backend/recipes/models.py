@@ -1,18 +1,18 @@
+import uuid
+
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 
-from .common_fields import (AbstractSlug, AbstractVisible, AbstractUpdated,
-                            AbstractSorting, AbstractCreated, AbstractImage)
+from foodgram.utils import ImageUploadToFactory
 
 
 User = get_user_model()
 
 
-class ProductCategory(AbstractSlug, AbstractVisible, AbstractUpdated,
-                      AbstractCreated, AbstractSorting):
+class ProductCategory(models.Model):
     """
     Model for registering a product category.
     This is the groundwork for a future feature
@@ -21,6 +21,28 @@ class ProductCategory(AbstractSlug, AbstractVisible, AbstractUpdated,
     name = models.CharField(
         max_length=100,
         verbose_name="name of the product category",
+    )
+    slug = models.SlugField(
+        verbose_name="slug",
+        unique=True,
+        max_length=100,
+        default=uuid.uuid1
+    )
+    created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="created"
+    )
+    is_visible = models.BooleanField(
+        verbose_name="is visible",
+        default=True
+    )
+    updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name="updated"
+    )
+    sorting = models.PositiveIntegerField(
+        verbose_name="sorting",
+        default=0
     )
 
     class Meta:
@@ -36,7 +58,7 @@ class ProductCategory(AbstractSlug, AbstractVisible, AbstractUpdated,
         return reverse("page", kwargs={"slug": self.slug})
 
 
-class Ingredient(AbstractCreated, AbstractSorting):
+class Ingredient(models.Model):
     """
     Food Ingredient Model with Name and Unit.
     """
@@ -49,6 +71,14 @@ class Ingredient(AbstractCreated, AbstractSorting):
         max_length=20,
         verbose_name="unit of measurement"
     )
+    created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="created"
+    )
+    sorting = models.PositiveIntegerField(
+        verbose_name="sorting",
+        default=0
+    )
 
     class Meta:
         verbose_name = "ingredient"
@@ -60,7 +90,7 @@ class Ingredient(AbstractCreated, AbstractSorting):
         return self.name
 
 
-class Tag(AbstractSlug, AbstractVisible, AbstractCreated, AbstractSorting):
+class Tag(models.Model):
     """
     Tag model - which allows you to register
     the recommended consumption time of the dish.
@@ -84,6 +114,24 @@ class Tag(AbstractSlug, AbstractVisible, AbstractCreated, AbstractSorting):
         max_length=10,
         verbose_name="HEX color scheme",
     )
+    slug = models.SlugField(
+        verbose_name="slug",
+        unique=True,
+        max_length=100,
+        default=uuid.uuid1
+    )
+    is_visible = models.BooleanField(
+        verbose_name="is visible",
+        default=True
+    )
+    created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="created"
+    )
+    sorting = models.PositiveIntegerField(
+        verbose_name="sorting",
+        default=0
+    )
 
     class Meta:
         verbose_name = "tag"
@@ -95,8 +143,7 @@ class Tag(AbstractSlug, AbstractVisible, AbstractCreated, AbstractSorting):
         return self.name
 
 
-class Recipe(AbstractSlug, AbstractImage, AbstractVisible,
-             AbstractUpdated, AbstractCreated, AbstractSorting):
+class Recipe(models.Model):
     """
     The main application model that stores
     aggregated information about a food recipe.
@@ -113,6 +160,11 @@ class Recipe(AbstractSlug, AbstractImage, AbstractVisible,
         blank=True,
         on_delete=models.CASCADE,
         related_name="recipes"
+    )
+    image = models.ImageField(
+        verbose_name="image",
+        help_text="image size no more than 1MB",
+        upload_to=ImageUploadToFactory("images")
     )
     tags = models.ManyToManyField(
         Tag,
@@ -133,6 +185,28 @@ class Recipe(AbstractSlug, AbstractImage, AbstractVisible,
         verbose_name="cooking time",
         # cooking time cannot be less than 1 minute
         validators=[MinValueValidator(1)]
+    )
+    slug = models.SlugField(
+        verbose_name="slug",
+        unique=True,
+        max_length=100,
+        default=uuid.uuid1
+    )
+    is_visible = models.BooleanField(
+        verbose_name="is visible",
+        default=True
+    )
+    updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name="updated"
+    )
+    created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="created"
+    )
+    sorting = models.PositiveIntegerField(
+        verbose_name="sorting",
+        default=0
     )
 
     class Meta:
@@ -195,7 +269,7 @@ class RecipeIngredient(models.Model):
         )
 
 
-class Subscription(AbstractCreated):
+class Subscription(models.Model):
     """
     User subscription model for author's recipes.
     """
@@ -208,6 +282,10 @@ class Subscription(AbstractCreated):
         User,
         on_delete=models.CASCADE,
         related_name="recipe_authors"
+    )
+    created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="created"
     )
 
     class Meta:
@@ -243,23 +321,15 @@ class FavoriteRecipe(models.Model):
         verbose_name = "favorite recipe"
         verbose_name_plural = "favorite recipes"
         app_label = "recipes"
-
-    @classmethod
-    def create(cls, user, recipe):
-        favorite_recipe = FavoriteRecipe.objects.filter(
-            user=user, recipe=recipe
-        )[0].exists()
-        if favorite_recipe:
-            raise ValueError(f"Favorite Recipe already exist.")
-        else:
-            favorite_recipe = cls(user=user, recipe=recipe)
-        return favorite_recipe
+        models.UniqueConstraint(
+            fields=["user", "recipe"], name="favorite_recipe_unique"
+        )
 
     def __str__(self):
         return f"Recipe {self.recipe} in favorites list of {self.user}"
 
 
-class ShoppingList(AbstractCreated):
+class ShoppingList(models.Model):
     """
     Model for storing recipes in a shopping list,
     which will allow you to aggregate products into a single list.
@@ -274,22 +344,18 @@ class ShoppingList(AbstractCreated):
         on_delete=models.CASCADE,
         related_name="shopping_list_recipes"
     )
+    created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="created"
+    )
 
     class Meta:
         verbose_name = "shopping list"
         verbose_name_plural = "shopping list"
         app_label = "recipes"
+        models.UniqueConstraint(
+            fields=["user", "recipe"], name="shopping_list_unique"
+        )
 
     def __str__(self):
         return f"Recipe {self.recipe} in shopping list of {self.user}"
-
-    @classmethod
-    def create(cls, user, recipe):
-        recipe_in_shop_list = ShoppingList.objects.filter(
-            user=user, recipe=recipe
-        )[0].exists()
-        if recipe_in_shop_list:
-            raise ValueError(f"This recipe is already exist in shop list.")
-        else:
-            recipe_in_shop_list = cls(user=user, recipe=recipe)
-        return recipe_in_shop_list
