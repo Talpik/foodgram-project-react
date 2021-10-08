@@ -182,12 +182,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
 
         shop_dict = dict()
-        for e in value_list:
-            if not shop_dict.get(f"{e[0]}, {e[2]} - "):
-                shop_dict[f"{e[0]}, {e[2]} : "] = 0
-                shop_dict[f"{e[0]}, {e[2]} : "] += e[1]
+        for element in value_list:
+            if not shop_dict.get(f"{element[0]}, {element[2]} - "):
+                shop_dict[f"{element[0]}, {element[2]} : "] = 0
+                shop_dict[f"{element[0]}, {element[2]} : "] += element[1]
             else:
-                shop_dict[f"{e[0]}, {e[2]} : "] += e[1]
+                shop_dict[f"{element[0]}, {element[2]} : "] += element[1]
         shop_string = "\n".join("{} {},".format(
             k, v
         ) for k, v in shop_dict.items())
