@@ -2,9 +2,9 @@
 The Foodgram project allows users to post recipes, add recipes to favorites
 and shopping lists, follow other users, and download a grocery list.
 Please, test the service at:
-```
+`
 http://62.84.117.174/
-```
+`
 ```
 login: admin@admin.com
 pass: 0228
