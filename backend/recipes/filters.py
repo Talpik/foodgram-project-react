@@ -35,7 +35,7 @@ class RecipeFilter(f.FilterSet):
         user = request.user
 
         if user.is_anonymous:
-            return Recipe.objects.all()
+            return Recipe.objects.all().order_by("-created")
 
         queryset = Recipe.objects.annotate(
             is_favorited=Exists(FavoriteRecipe.objects.filter(
@@ -44,10 +44,12 @@ class RecipeFilter(f.FilterSet):
             is_in_shopping_cart=Exists(ShoppingList.objects.filter(
                 user=user, recipe_id=OuterRef('pk')
             ))
-        )
+        ).order_by('-created')
 
         if request.GET.get('is_favorited'):
-            return queryset.filter(is_favorited=True)
+            return queryset.filter(
+                is_favorited=True).order_by("-created")
         elif request.GET.get('is_in_shopping_cart'):
-            return queryset.filter(is_in_shopping_cart=True)
+            return queryset.filter(
+                is_in_shopping_cart=True).order_by("-created")
         return queryset
