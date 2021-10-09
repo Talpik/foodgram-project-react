@@ -1,7 +1,9 @@
 # Author of `Foodgram` project is Vladimir.Talpa - it's final work in Yandex.Praktikum for Python Backend Course.
 The Foodgram project allows users to post recipes, add recipes to favorites
 and shopping lists, follow other users, and download a grocery list.
-
+```
+you can test the service at http://84.201.156.189/
+```
 ### Launching a local project
 - Clone the repository with the command:
 ```
