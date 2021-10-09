@@ -8,7 +8,7 @@ class Command(BaseCommand):
     help = 'Load ingredients in DataBase'
 
     def handle(self, *args, **options):
-        with open('../data/ingredients.csv') as file:
+        with open('data/ingredients.csv') as file:
             file_reader = csv.reader(file)
             # TODO update fixture's data by category information
             # ProductCategory.objects.all().delete()
