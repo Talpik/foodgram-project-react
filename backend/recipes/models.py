@@ -96,9 +96,9 @@ class Tag(models.Model):
     the recommended consumption time of the dish.
     Having a special hex color code for frontend.
     """
-    BREAKFAST = "BR"
-    LUNCH = "LN"
-    DINNER = "DN"
+    BREAKFAST = "Завтрак"
+    LUNCH = "Обед"
+    DINNER = "Ужин"
     MEAL_TIME = (
         (BREAKFAST, "Завтрак"),
         (LUNCH, "Обед"),
