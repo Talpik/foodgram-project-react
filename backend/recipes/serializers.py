@@ -176,7 +176,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         data["tags"] = tags
 
         cooking_time = self.initial_data.get("cooking_time")
-        if cooking_time < 1:
+        if int(cooking_time) < 1:
             raise serializers.ValidationError(
                 "Make sure that cooking time is grater then 0."
             )
@@ -196,10 +196,10 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe (Recipe): A new instance of recipe.
 
         """
+        tags = data.pop("tags")
         image = data.pop("image")
         ingredients = data.pop("ingredients")
         recipe = Recipe.objects.create(image=image, **data)
-        tags = self.initial_data.get("tags")
         self.adding_tags_to_recipe(tags, recipe)
         self.save_ingredients_in_recipe(ingredients, recipe)
 
@@ -219,7 +219,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         """
         recipe.tags.clear()
-        tags = self.initial_data.get("tags")
+        tags = data.get("tags")
         self.adding_tags_to_recipe(tags, recipe)
 
         RecipeIngredient.objects.filter(recipe=recipe).delete()
@@ -244,7 +244,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient in ingredients:
             RecipeIngredient.objects.create(
                 recipe=recipe,
-                ingredient_id=ingredient.get("id"),
+                ingredients_id=ingredient.get("id"),
                 amount=ingredient.get("amount")
             )
 
