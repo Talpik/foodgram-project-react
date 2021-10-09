@@ -1,3 +1,4 @@
+from django.db.models import F, Sum
 from django.http.response import HttpResponse
 
 from djoser.views import UserViewSet
@@ -11,7 +12,7 @@ from rest_framework.pagination import PageNumberPagination
 
 from .filters import IngredientFilter, RecipeFilter
 from .models import (User, Ingredient, Tag, Recipe,
-                     Subscription, FavoriteRecipe, ShoppingList)
+                     Subscription, FavoriteRecipe, ShoppingList, RecipeIngredient)
 from .permissions import IsOwnerOrAdminOrReadOnly
 from .serializers import (UserSerializer, IngredientSerializer,
                           TagSerializer, RecipeSerializer,
@@ -171,26 +172,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
-        all_recipes = Recipe.objects.all()
-        recipes = all_recipes.shopping_list_recipes.filter(
-            user=request.user
-        )
-        value_list = recipes.objects.value_list(
-            "ingredients__ingredients__name",
-            "ingredients__amount",
-            "ingredients__ingredients_measurement__unit",
-        )
-
-        shop_dict = dict()
-        for element in value_list:
-            if not shop_dict.get(f"{element[0]}, {element[2]} - "):
-                shop_dict[f"{element[0]}, {element[2]} : "] = 0
-                shop_dict[f"{element[0]}, {element[2]} : "] += element[1]
-            else:
-                shop_dict[f"{element[0]}, {element[2]} : "] += element[1]
-        shop_string = "\n".join("{} {},".format(
-            k, v
-        ) for k, v in shop_dict.items())
-        response = HttpResponse(shop_string, "Content-Type: text/plain")
-        response["Content-Disposition"] = 'attachment; filename="shoplist.txt"'
+        items = RecipeIngredient.objects.select_related(
+            "recipe", "ingredients"
+        ).filter(recipe__shopping_list_recipes__user=request.user)
+        items = items.values(
+            "ingredients__name",
+            "ingredients__measurement_unit"
+        ).annotate(
+            name=F("ingredients__name"),
+            units=F("ingredients__measurement_unit"),
+            total=Sum("amount")
+        ).order_by('-total')
+        shop_string = "\n".join([
+            f"{item['name']} {item['units']} - {item['total']}"
+            for item in items
+        ])
+        filename = "shop_list.txt"
+        response = HttpResponse(shop_string, content_type="text/plain")
+        response["Content-Disposition"] = f"attachment; filename={filename}"
         return response
